@@ -1,4 +1,5 @@
-use lab01::parser::{parse_fasta, Stats, RecordMeta};
+mod parser;
+use crate::parser::{parse_fasta, Stats, RecordMeta};
 
 use slint::{ModelRc, SharedString, VecModel};
 use std::path::PathBuf;
@@ -153,7 +154,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 }
                                 Err(msg) => {
                                     let cancelled = msg == "Canceled";
-                                    win.set_status(SharedString::from(if cancelled { "Canceled." } else { &msg }));
+                                    win.set_status(SharedString::from(if cancelled { "Canceled." } else { msg.as_str() }));
                                     if !cancelled { win.set_progress(0.0); }
                                 }
                             }
