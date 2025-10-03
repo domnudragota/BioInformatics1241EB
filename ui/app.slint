@@ -1,0 +1,105 @@
+import { VerticalBox, HorizontalBox, Button, ListView } from "std-widgets.slint";
+
+// Simple determinate progress bar
+component SimpleProgress inherits Rectangle {
+    in property <float> value; // expect 0..1
+    height: 8px;
+    border-width: 1px;
+    border-color: #444;
+    background: #2a2d34;
+    private property <float> v: value < 0 ? 0 : (value > 1 ? 1 : value);
+
+    Rectangle {
+        x: 0px;
+        width: parent.width * v;
+        height: parent.height;
+        background: #5ad65a;
+    }
+}
+
+struct Row { symbol: string, count: int, pct: string }
+struct Rec { idx: int, header: string, len: int }
+
+export component AppWindow inherits Window {
+    width: 700px;
+    height: 620px;
+    title: "FASTA Viewer (Slint)";
+
+    in-out property <string> file_path;
+    in-out property <string> status;
+    in-out property <string> header_preview;
+    in-out property <bool>   parsing;
+    in-out property <float>  progress;       // 0.0 .. 1.0
+    in-out property <int>    record_count;
+    in-out property <int>    total_len;
+    in-out property <[Row]>  frequencies;
+    in-out property <[Rec]>  records;
+
+    callback open_file_clicked();
+    callback cancel_clicked();
+
+    background: #1b1d23;
+
+    VerticalBox {
+        padding: 12px;
+        spacing: 12px;
+
+        // Top bar
+        HorizontalBox {
+            spacing: 8px;
+
+            Button {
+                text: "Open FASTA…";
+                enabled: !root.parsing;
+                clicked => { root.open_file_clicked(); }
+            }
+            Button {
+                text: "Cancel";
+                enabled: root.parsing;
+                clicked => { root.cancel_clicked(); }
+            }
+
+            Text {
+                text: root.file_path;
+                wrap: word-wrap;
+                horizontal-stretch: 1;
+                color: #d0d0d0;
+            }
+        }
+
+        // Progress + status
+        SimpleProgress { value: root.progress; visible: root.parsing; }
+        Text { text: root.status; color: #c0c0c0; }
+
+        // Summary
+        Text { text: "Header: " + root.header_preview; color: #e6e6e6; }
+        Text { text: "Records: " + root.record_count + "    Total length: " + root.total_len; color: #e6e6e6; }
+
+        // Frequencies table
+        Text { text: "Frequencies (symbol | count | %)"; color: #a0a0a0; }
+        ListView {
+            for row[index] in root.frequencies : HorizontalBox {
+                spacing: 16px;
+                Text { text: row.symbol; width: 40px; color: #ffffff; }
+                Text { text: row.count;  width: 80px; color: #ffffff; }
+                Text { text: row.pct;                color: #a8ffa8; }
+            }
+        }
+
+        // Records table
+        Text { text: "Records (index | length | header)"; color: #a0a0a0; }
+        ListView {
+            for rec[i] in root.records : HorizontalBox {
+                spacing: 12px;
+                Text { text: rec.idx;   width: 40px; color: #ffffff; }
+                Text { text: rec.len;   width: 80px; color: #ffffff; }
+                Text {
+                    text: rec.header;
+                    color: #e0e0e0;
+                    horizontal-stretch: 1;
+                    wrap: word-wrap;
+                }
+            }
+        }
+    }
+}
