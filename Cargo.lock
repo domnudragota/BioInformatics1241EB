@@ -3,16 +3,6 @@
 version = 4
 
 [[package]]
-name = "BioInfo"
-version = "0.1.0"
-dependencies = [
- "flate2",
- "rfd",
- "slint",
- "slint-build",
-]
-
-[[package]]
 name = "ab_glyph"
 version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2514,6 +2504,16 @@ dependencies = [
  "arrayvec",
  "euclid",
  "smallvec",
+]
+
+[[package]]
+name = "lab01"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+ "rfd",
+ "slint",
+ "slint-build",
 ]
 
 [[package]]

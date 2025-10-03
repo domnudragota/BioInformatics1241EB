@@ -1,12 +1,3 @@
-[package]
-name = "BioInfo"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-slint = "1.5"
-rfd = "0.14"
-flate2 = "1.1.2"
-
-[build-dependencies]
-slint-build = "1.5"
+[workspace]
+members = ["labs/lab01"]
+resolver = "2"

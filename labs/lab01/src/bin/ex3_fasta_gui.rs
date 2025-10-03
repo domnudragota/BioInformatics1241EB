@@ -1,6 +1,5 @@
-mod parser;
+use lab01::parser::{parse_fasta, Stats, RecordMeta};
 
-use parser::{parse_fasta, Stats, RecordMeta};
 use slint::{ModelRc, SharedString, VecModel};
 use std::path::PathBuf;
 use std::sync::{

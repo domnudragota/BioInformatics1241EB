@@ -1,0 +1,21 @@
+[package]
+name = "lab01"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+gui = ["slint", "rfd", "flate2"]
+
+[dependencies]
+slint  = { version = "1.5", optional = true }
+rfd    = { version = "0.14", optional = true }
+flate2 = { version = "1",   optional = true }
+
+[build-dependencies]
+slint-build = "1.5"
+
+[[bin]]
+name = "ex3_fasta_gui"
+path = "src/bin/ex3_fasta_gui.rs"
+required-features = ["gui"]
