@@ -49,4 +49,11 @@ from root of the repo
 `cargo run --bin ex02_kmers_present ABAA`
 
 - exercise 2
-`
+
+`make -C labs/lab02 ex3`
+
+`cd ~/BioInfo/labs/lab02`
+
+`make ex3`
+
+- exercise 3 and follow instructions on GUI
