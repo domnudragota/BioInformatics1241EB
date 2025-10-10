@@ -8,4 +8,4 @@ ex2:
 	cargo run --bin ex02_kmers_present
 
 ex3:
-	cargo run --features gui --release --bin ex3_fillme_gui
+	cargo run --features gui --release --bin ex3_fasta_gui

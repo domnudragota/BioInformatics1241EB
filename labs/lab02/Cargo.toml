@@ -1,9 +1,24 @@
 [package]
 name = "lab02"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+publish = false
 
 [features]
-gui = []
+gui = ["dep:slint", "dep:rfd", "dep:flate2"]
 
 [dependencies]
+
+[dependencies.slint]
+version = "1.13.1"
+optional = true
+default-features = false
+features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg"]
+
+[dependencies.rfd]
+version = "0.14"
+optional = true
+
+[dependencies.flate2]
+version = "1"
+optional = true
