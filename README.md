@@ -37,3 +37,16 @@ or if you're on root
 `make -C ~/BioInfo/labs/lab02 ex1`
 
 - exercise 1
+
+`cd ~/BioInfo/labs/lab02`
+
+`make ex2` and this will use the default sequence from ex1
+
+However, you can paste a custom argument like this:
+
+from root of the repo 
+
+`cargo run --bin ex02_kmers_present ABAA`
+
+- exercise 2
+`

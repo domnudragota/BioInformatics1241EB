@@ -5,7 +5,7 @@ ex1:
 	cargo run --bin ex01_kmer_freq
 
 ex2:
-	cargo run --bin ex02_fillme
+	cargo run --bin ex02_kmers_present
 
 ex3:
 	cargo run --features gui --release --bin ex3_fillme_gui
