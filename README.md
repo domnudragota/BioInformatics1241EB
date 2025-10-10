@@ -26,4 +26,14 @@ or if you're on root
 
 - exercise 3
 
+## LAB02
 
+`cd ~/BioInfo/labs/lab02`
+
+`make ex1`
+
+or if you're on root
+
+`make -C ~/BioInfo/labs/lab02 ex1`
+
+- exercise 1
