@@ -57,3 +57,13 @@ from root of the repo
 `make ex3`
 
 - exercise 3 and follow instructions on GUI
+
+## LAB03
+
+you can pass args directly 
+
+`cargo run -p lab03 --bin ex01_tm -- ACGTACGTACGTACGTACGT 0.05`
+
+or go to lab03 dir and run 
+
+`make ex1`

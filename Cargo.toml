@@ -1,4 +1,7 @@
 [workspace]
-members = ["labs/lab01",
-"labs/lab02",]
+members = [
+    "labs/lab01",
+    "labs/lab02",
+    "labs/lab03"
+]
 resolver = "2"
