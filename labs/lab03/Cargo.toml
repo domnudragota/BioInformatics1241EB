@@ -2,11 +2,18 @@
 name = "lab03"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [features]
-gui = ["dep:slint", "dep:rfd", "dep:flate2"]
+# keep GUI wiring for ex3, but GUI is not needed for ex1/ex2
+gui = ["dep:slint", "dep:rfd"]
 
-# ex01 doesn't need these yet, but we keep the gui wiring like lab02
+[dependencies]
+anyhow = "1"
+flate2 = "1"
+plotters = "0.3"
+
+# --- optional GUI deps for a later exercise ---
 [dependencies.slint]
 version = "1.13.1"
 optional = true
@@ -17,10 +24,11 @@ features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg"]
 version = "0.14"
 optional = true
 
-[dependencies.flate2]
-version = "1"
-optional = true
-
+# ---- bins ----
 [[bin]]
 name = "ex01_tm"
 path = "src/bin/ex01_tm.rs"
+
+[[bin]]
+name = "ex02_tm_window"
+path = "src/bin/ex02_tm_window.rs"
