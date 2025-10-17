@@ -1,0 +1,26 @@
+[package]
+name = "lab03"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+gui = ["dep:slint", "dep:rfd", "dep:flate2"]
+
+# ex01 doesn't need these yet, but we keep the gui wiring like lab02
+[dependencies.slint]
+version = "1.13.1"
+optional = true
+default-features = false
+features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg"]
+
+[dependencies.rfd]
+version = "0.14"
+optional = true
+
+[dependencies.flate2]
+version = "1"
+optional = true
+
+[[bin]]
+name = "ex01_tm"
+path = "src/bin/ex01_tm.rs"
