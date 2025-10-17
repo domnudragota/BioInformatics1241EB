@@ -10,6 +10,10 @@ ex1:
 ex2:
 	cargo run --bin ex02_tm_window
 
+ex3:
+	cargo run --bin ex03_threshold
+
+
 fmt:
 	cargo fmt --all
 

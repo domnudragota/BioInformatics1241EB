@@ -32,3 +32,7 @@ path = "src/bin/ex01_tm.rs"
 [[bin]]
 name = "ex02_tm_window"
 path = "src/bin/ex02_tm_window.rs"
+
+[[bin]]
+name = "ex03_threshold"
+path = "src/bin/ex03_threshold.rs"

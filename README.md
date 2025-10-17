@@ -66,4 +66,14 @@ you can pass args directly
 
 or go to lab03 dir and run 
 
-`make ex1`
+`make ex1
+
+- exercise 1
+
+`make ex2` and give the input of the FASTA file => a .PNG with the plot will be generated
+
+- exercise 2
+
+`make ex3` and give the input of the FASTA file => a .PNG with the plot will be generated
+
+- exercise 3
