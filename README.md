@@ -77,3 +77,9 @@ or go to lab03 dir and run
 `make ex3` and give the input of the FASTA file => a .PNG with the plot will be generated
 
 - exercise 3
+
+## LAB04 (Python)
+
+`python3 labs_python/lab04/ex01_translate.py --seq ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG`
+
+- exercise 1
