@@ -83,3 +83,12 @@ or go to lab03 dir and run
 `python3 labs_python/lab04/ex01_translate.py --seq ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG`
 
 - exercise 1
+
+run with `MPLBACKEND=Agg python labs_python/lab04/ex02_codon_freq.py \
+  --combined labs_python/lab04/data/combined.fa \
+  --covid-prefix "covid|" \
+  --flu-prefix "influenza|" \
+  --outdir labs_python/lab04/outputs \
+  --nutrition-outdir labs_python/lab04/outputs/nutrition`
+
+- exercise 2
