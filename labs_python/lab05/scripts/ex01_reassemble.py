@@ -217,7 +217,7 @@ def main():
     parser = argparse.ArgumentParser(description="Exercise 1: random sampling + greedy assembly")
     parser.add_argument("--ref", type=str, default="../data/reference.fasta",
                         help="Path to FASTA (single sequence, 1k–3k nt). Default: ../data/reference.fasta")
-    parser.add_argument("--reads", type=int, default=2000, help="Number of reads to sample (default: 2000)")
+    parser.add_argument("--reads", type=int, default=3000, help="Number of reads to sample (default: 2000)")
     parser.add_argument("--minlen", type=int, default=100, help="Minimum read length (default: 100)")
     parser.add_argument("--maxlen", type=int, default=150, help="Maximum read length (default: 150)")
     parser.add_argument("--k", type=int, default=30, help="Minimum overlap length (default: 30)")
