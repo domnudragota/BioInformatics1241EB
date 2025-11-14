@@ -92,3 +92,11 @@ run with `MPLBACKEND=Agg python labs_python/lab04/ex02_codon_freq.py \
   --nutrition-outdir labs_python/lab04/outputs/nutrition`
 
 - exercise 2
+
+## LAB07 (Python)
+
+for exercise 3
+
+`cd BioInformatics1241EB
+source .venv/bin/activate
+python labs_python/lab07/lab07_ex3_influenza_patterns.py`
