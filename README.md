@@ -100,3 +100,10 @@ for exercise 3
 `cd BioInformatics1241EB
 source .venv/bin/activate
 python labs_python/lab07/lab07_ex3_influenza_patterns.py`
+
+## LAB08 (Python)
+
+for exercise 2
+
+`python labs_python/lab08/ex2_detect_transposons.py
+`
