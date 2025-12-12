@@ -107,3 +107,11 @@ for exercise 2
 
 `python labs_python/lab08/ex2_detect_transposons.py
 `
+
+## LAB11 (Python)
+
+for exercise 1
+
+`
+python labs_python/lab11/ex1_needleman_wunsch.py --matrix
+`
