@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 """
-Lab11 - Exercise 2
-Pairwise alignment of multiple HIV-1 genomes (multi-FASTA) using a piecewise strategy.
+Lab11 - Exercise 2 (extended for console visualization)
+Pairwise alignment of multiple HIV-1 genomes (multi-FASTA) using a piecewise strategy,
+and show alignment + a proportional "rectangular bar" similarity visualization in console.
 
-Why piecewise?
-- Full Needleman–Wunsch on ~9k x ~9k needs a huge DP matrix.
-- Strategy: find exact-match "anchors" (unique k-mers), split into pieces,
-  align only those pieces with NW, then stitch.
-
-No external libraries (stdlib only).
+Stdlib only.
 """
 
 import argparse
@@ -23,6 +19,7 @@ from itertools import combinations
 # -----------------------------
 
 IUPAC_DNA = set("ACGTRYSWKMBDHVN")
+
 
 def parse_fasta(path: str):
     """
@@ -42,15 +39,16 @@ def parse_fasta(path: str):
             if line.startswith(">"):
                 if header is not None:
                     seq = "".join(seq_parts).upper()
-                    records.append({
-                        "id": header.split()[0],
-                        "header": header,
-                        "seq": seq,
-                    })
+                    records.append(
+                        {
+                            "id": header.split()[0],
+                            "header": header,
+                            "seq": seq,
+                        }
+                    )
                 header = line[1:].strip()
                 seq_parts = []
             else:
-                # Keep IUPAC DNA letters only (safe for NCBI sequences)
                 cleaned = []
                 for ch in line.upper():
                     if ch in IUPAC_DNA:
@@ -60,11 +58,13 @@ def parse_fasta(path: str):
 
     if header is not None:
         seq = "".join(seq_parts).upper()
-        records.append({
-            "id": header.split()[0],
-            "header": header,
-            "seq": seq,
-        })
+        records.append(
+            {
+                "id": header.split()[0],
+                "header": header,
+                "seq": seq,
+            }
+        )
 
     return records
 
@@ -83,10 +83,8 @@ def nw_align(s1: str, s2: str, match: int, mismatch: int, gap: int):
     m = len(s1)
     n = len(s2)
 
-    # score matrix
     score = [[0] * (n + 1) for _ in range(m + 1)]
-    # traceback matrix: 1=diag, 2=up, 3=left
-    tb = [[0] * (n + 1) for _ in range(m + 1)]
+    tb = [[0] * (n + 1) for _ in range(m + 1)]  # 1=diag, 2=up, 3=left
 
     for i in range(1, m + 1):
         score[i][0] = score[i - 1][0] + gap
@@ -101,6 +99,7 @@ def nw_align(s1: str, s2: str, match: int, mismatch: int, gap: int):
         row = score[i]
         for j in range(1, n + 1):
             b = s2[j - 1]
+
             diag = score[i - 1][j - 1] + (match if a == b else mismatch)
             up = score[i - 1][j] + gap
             left = row[j - 1] + gap
@@ -117,22 +116,21 @@ def nw_align(s1: str, s2: str, match: int, mismatch: int, gap: int):
             row[j] = best
             tb[i][j] = direction
 
-    # Traceback
     i, j = m, n
     a1 = []
     a2 = []
     while i > 0 or j > 0:
         d = tb[i][j]
-        if d == 1:  # diag
+        if d == 1:
             a1.append(s1[i - 1])
             a2.append(s2[j - 1])
             i -= 1
             j -= 1
-        elif d == 2:  # up
+        elif d == 2:
             a1.append(s1[i - 1])
             a2.append("-")
             i -= 1
-        else:  # left
+        else:
             a1.append("-")
             a2.append(s2[j - 1])
             j -= 1
@@ -155,15 +153,14 @@ def build_unique_kmer_pos(seq: str, k: int):
     L = len(seq)
 
     for i in range(L - k + 1):
-        kmer = seq[i:i + k]
-        # keep anchors strict to avoid ambiguity
+        kmer = seq[i : i + k]
         if any(ch not in "ACGT" for ch in kmer):
             continue
         counts[kmer] = counts.get(kmer, 0) + 1
 
     pos = {}
     for i in range(L - k + 1):
-        kmer = seq[i:i + k]
+        kmer = seq[i : i + k]
         if any(ch not in "ACGT" for ch in kmer):
             continue
         if counts.get(kmer, 0) == 1:
@@ -173,13 +170,10 @@ def build_unique_kmer_pos(seq: str, k: int):
 
 
 def unique_kmer_counts(seq: str, k: int):
-    """
-    Counts k-mers in seq, skipping ambiguous kmers (not A/C/G/T).
-    """
     counts = {}
     L = len(seq)
     for i in range(L - k + 1):
-        kmer = seq[i:i + k]
+        kmer = seq[i : i + k]
         if any(ch not in "ACGT" for ch in kmer):
             continue
         counts[kmer] = counts.get(kmer, 0) + 1
@@ -197,7 +191,7 @@ def find_anchors_unique(seq1: str, seq2: str, k: int):
     anchors = []
     L2 = len(seq2)
     for j in range(L2 - k + 1):
-        kmer = seq2[j:j + k]
+        kmer = seq2[j : j + k]
         if any(ch not in "ACGT" for ch in kmer):
             continue
         if c2.get(kmer, 0) == 1:
@@ -208,10 +202,7 @@ def find_anchors_unique(seq1: str, seq2: str, k: int):
 
 
 def lis_chain(anchors):
-    """
-    Chains anchors in increasing order using LIS on pos2 after sorting by pos1.
-    Enforces monotonicity so anchors don't "cross".
-    """
+    """Longest increasing subsequence on pos2 after sorting by pos1."""
     if not anchors:
         return []
 
@@ -222,7 +213,6 @@ def lis_chain(anchors):
     prev = [-1] * len(anchors)
 
     for i, (_, p2) in enumerate(anchors):
-        # strictly increasing p2
         pos = bisect.bisect_left(tails, p2)
         if pos == len(tails):
             tails.append(p2)
@@ -233,7 +223,6 @@ def lis_chain(anchors):
 
         prev[i] = tails_idx[pos - 1] if pos > 0 else -1
 
-    # Reconstruct chain
     k = tails_idx[-1]
     chain = []
     while k != -1:
@@ -244,10 +233,7 @@ def lis_chain(anchors):
 
 
 def thin_chain(chain, k: int, anchor_step: int):
-    """
-    Reduces anchor density to avoid too many tiny segments.
-    Keeps anchors at least max(k, anchor_step) apart in both sequences.
-    """
+    """Reduce anchor density to avoid too many tiny segments."""
     out = []
     last1 = -10**9
     last2 = -10**9
@@ -271,8 +257,8 @@ def count_non_gaps(aln: str) -> int:
 
 def align_by_windows(s1: str, s2: str, match: int, mismatch: int, gap: int, max_piece: int, overlap: int = 80):
     """
-    Fallback heuristic (still step-by-step):
-    Aligns windows of size max_piece, advances by consumed characters (minus overlap).
+    Fallback step-by-step alignment:
+    Align windows of size max_piece, advance by consumed chars (minus overlap).
     """
     i = 0
     j = 0
@@ -284,8 +270,8 @@ def align_by_windows(s1: str, s2: str, match: int, mismatch: int, gap: int, max_
 
     while (i < len(s1) or j < len(s2)) and it < max_iters:
         it += 1
-        p1 = s1[i:i + max_piece]
-        p2 = s2[j:j + max_piece]
+        p1 = s1[i : i + max_piece]
+        p2 = s2[j : j + max_piece]
         if not p1 and not p2:
             break
 
@@ -298,7 +284,6 @@ def align_by_windows(s1: str, s2: str, match: int, mismatch: int, gap: int, max_
         if di == 0 and dj == 0:
             break
 
-        # move forward, keep overlap for stability
         step_i = max(di - overlap, 1) if i + di < len(s1) else di
         step_j = max(dj - overlap, 1) if j + dj < len(s2) else dj
         i = min(i + step_i, len(s1))
@@ -321,9 +306,9 @@ def align_piecewise(
     max_depth: int = 30,
 ):
     """
-    Main strategy:
+    Strategy:
     - if small enough -> NW
-    - else find anchor chain -> recursively align pieces between anchors -> stitch
+    - else find anchor chain -> recursively align gaps between anchors -> stitch
     - if no anchors -> decrease k; if still none -> window fallback
     """
     if len(s1) <= max_piece and len(s2) <= max_piece:
@@ -341,7 +326,7 @@ def align_piecewise(
                 s1, s2, match, mismatch, gap,
                 k=k - 2, min_k=min_k,
                 max_piece=max_piece, anchor_step=anchor_step,
-                depth=depth + 1, max_depth=max_depth
+                depth=depth + 1, max_depth=max_depth,
             )
         return align_by_windows(s1, s2, match, mismatch, gap, max_piece=max_piece, overlap=80)
 
@@ -351,19 +336,18 @@ def align_piecewise(
     prev2 = 0
 
     for p1, p2 in chain:
-        # align region before the anchor
         seg1 = s1[prev1:p1]
         seg2 = s2[prev2:p2]
+
         a1, a2 = align_piecewise(
             seg1, seg2, match, mismatch, gap,
             k=k, min_k=min_k,
             max_piece=max_piece, anchor_step=anchor_step,
-            depth=depth + 1, max_depth=max_depth
+            depth=depth + 1, max_depth=max_depth,
         )
         out1.append(a1)
         out2.append(a2)
 
-        # add anchor itself (identical in both)
         anchor_seq = s1[p1:p1 + k]
         out1.append(anchor_seq)
         out2.append(anchor_seq)
@@ -371,12 +355,11 @@ def align_piecewise(
         prev1 = p1 + k
         prev2 = p2 + k
 
-    # tail after last anchor
     a1, a2 = align_piecewise(
         s1[prev1:], s2[prev2:], match, mismatch, gap,
         k=k, min_k=min_k,
         max_piece=max_piece, anchor_step=anchor_step,
-        depth=depth + 1, max_depth=max_depth
+        depth=depth + 1, max_depth=max_depth,
     )
     out1.append(a1)
     out2.append(a2)
@@ -385,10 +368,13 @@ def align_piecewise(
 
 
 # -----------------------------
-# Stats + output formatting
+# Console visualization helpers
 # -----------------------------
 
 def make_match_line(aln1: str, aln2: str) -> str:
+    """
+    '|' match, '.' mismatch, ' ' gap
+    """
     out = []
     for a, b in zip(aln1, aln2):
         if a == "-" or b == "-":
@@ -425,6 +411,86 @@ def identity_excluding_gaps(aln1: str, aln2: str):
     return matches, compared, pct
 
 
+def similarity_bar(aln1: str, aln2: str, width: int = 100, win: int = 60, threshold: float = 0.85):
+    """
+    Builds a proportional 'rectangular bar' line:
+    - Split alignment into `width` bins
+    - For each bin, compute windowed identity excluding gaps
+    - If identity >= threshold => draw a block '█', else space.
+
+    This highlights long similar regions as long bars.
+    """
+    L = len(aln1)
+    if L == 0:
+        return ""
+
+    # Use bins across alignment
+    bar = []
+    for b in range(width):
+        start = (b * L) // width
+        end = ((b + 1) * L) // width
+        if end <= start:
+            end = min(start + 1, L)
+
+        # Expand a bit around bin to be more "region-like" (optional smoothing)
+        mid = (start + end) // 2
+        w_start = max(0, mid - win // 2)
+        w_end = min(L, w_start + win)
+
+        matches = 0
+        compared = 0
+        for i in range(w_start, w_end):
+            a = aln1[i]
+            c = aln2[i]
+            if a == "-" or c == "-":
+                continue
+            compared += 1
+            if a == c:
+                matches += 1
+
+        ident = (matches / compared) if compared else 0.0
+        bar.append("█" if ident >= threshold else " ")
+
+    return "".join(bar)
+
+
+def print_alignment_blocks(aln1: str, aln2: str, block: int = 80, head_tail_blocks: int = 3):
+    """
+    Prints alignment in blocks.
+    If alignment is huge, print head+tail blocks (still 'shows' alignment but manageable).
+    """
+    mid = make_match_line(aln1, aln2)
+    total_blocks = (len(aln1) + block - 1) // block
+
+    def print_block(bi: int):
+        start = bi * block
+        end = min((bi + 1) * block, len(aln1))
+        print(aln1[start:end])
+        print(mid[start:end])
+        print(aln2[start:end])
+        print()
+
+    if total_blocks <= head_tail_blocks * 2:
+        for bi in range(total_blocks):
+            print_block(bi)
+        return
+
+    # head
+    for bi in range(head_tail_blocks):
+        print_block(bi)
+
+    omitted = total_blocks - 2 * head_tail_blocks
+    print(f"... ({omitted} blocks omitted) ...\n")
+
+    # tail
+    for bi in range(total_blocks - head_tail_blocks, total_blocks):
+        print_block(bi)
+
+
+# -----------------------------
+# File output
+# -----------------------------
+
 def safe_filename(name: str) -> str:
     return "".join(ch if (ch.isalnum() or ch in "._-") else "_" for ch in name)
 
@@ -436,27 +502,39 @@ def write_alignment_txt(path: str, id1: str, id2: str, aln1: str, aln2: str, sco
         f.write(f"alignment_length={len(aln1)} score={score} identity_excl_gaps={ident_pct:.2f}%\n\n")
 
         for start in range(0, len(aln1), block):
-            f.write(aln1[start:start + block] + "\n")
-            f.write(mid[start:start + block] + "\n")
-            f.write(aln2[start:start + block] + "\n\n")
+            f.write(aln1[start : start + block] + "\n")
+            f.write(mid[start : start + block] + "\n")
+            f.write(aln2[start : start + block] + "\n\n")
 
 
 # -----------------------------
-# Main (pairwise all-vs-all)
+# Main
 # -----------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Lab11 Ex2: piecewise pairwise alignment (multi-FASTA, stdlib only).")
+    parser = argparse.ArgumentParser(description="Lab11 Ex2: piecewise pairwise alignment + console bars (stdlib only).")
     parser.add_argument("-i", "--input", required=True, help="Path to multi-FASTA with ~10 HIV-1 genomes")
     parser.add_argument("-o", "--out", default="labs_python/lab11/out/ex2_hiv1_pairwise", help="Output directory")
+
     parser.add_argument("--match", type=int, default=1)
     parser.add_argument("--mismatch", type=int, default=-1)
     parser.add_argument("--gap", type=int, default=-1)
+
     parser.add_argument("--k", type=int, default=20, help="Anchor k-mer size (default: 20)")
     parser.add_argument("--min-k", type=int, default=12, help="Minimum k if anchors are missing (default: 12)")
     parser.add_argument("--max-piece", type=int, default=600, help="Max piece length to run NW directly (default: 600)")
     parser.add_argument("--anchor-step", type=int, default=250, help="Minimum spacing between anchors (default: 250)")
-    parser.add_argument("--block", type=int, default=80, help="Alignment print width in .txt (default: 80)")
+    parser.add_argument("--block", type=int, default=80, help="Alignment block width for printing/writing (default: 80)")
+
+    # Console visualization controls
+    parser.add_argument("--print-bar", action="store_true", help="Print similarity bar in console for each pair")
+    parser.add_argument("--bar-width", type=int, default=100, help="Similarity bar width in characters (default: 100)")
+    parser.add_argument("--bar-window", type=int, default=60, help="Similarity window size used per bar bin (default: 60)")
+    parser.add_argument("--bar-threshold", type=float, default=0.85, help="Identity threshold for bar blocks (default: 0.85)")
+
+    parser.add_argument("--print-align", action="store_true", help="Print alignment blocks in console for each pair")
+    parser.add_argument("--head-tail", type=int, default=3, help="If huge, print N head blocks + N tail blocks (default: 3)")
+
     args = parser.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -472,13 +550,19 @@ def main():
     summary_path = os.path.join(args.out, "summary.csv")
     with open(summary_path, "w", newline="", encoding="utf-8") as csvf:
         writer = csv.writer(csvf)
-        writer.writerow([
-            "seq1", "seq2",
-            "len1", "len2",
-            "alignment_len",
-            "matches_no_gaps", "compared_no_gaps", "identity_no_gaps_pct",
-            "score",
-        ])
+        writer.writerow(
+            [
+                "seq1",
+                "seq2",
+                "len1",
+                "len2",
+                "alignment_len",
+                "matches_no_gaps",
+                "compared_no_gaps",
+                "identity_no_gaps_pct",
+                "score",
+            ]
+        )
 
         pair_count = 0
         total_pairs = (len(records) * (len(records) - 1)) // 2
@@ -490,29 +574,60 @@ def main():
             s1 = a["seq"]
             s2 = b["seq"]
 
-            print(f"[{pair_count:02d}/{total_pairs:02d}] Aligning {id1} vs {id2} ...")
+            print(f"\n[{pair_count:02d}/{total_pairs:02d}] {id1}  VS  {id2}")
 
             aln1, aln2 = align_piecewise(
-                s1, s2,
-                match=args.match, mismatch=args.mismatch, gap=args.gap,
-                k=args.k, min_k=args.min_k,
-                max_piece=args.max_piece, anchor_step=args.anchor_step,
+                s1,
+                s2,
+                match=args.match,
+                mismatch=args.mismatch,
+                gap=args.gap,
+                k=args.k,
+                min_k=args.min_k,
+                max_piece=args.max_piece,
+                anchor_step=args.anchor_step,
             )
 
             score = alignment_score(aln1, aln2, args.match, args.mismatch, args.gap)
             matches, compared, ident_pct = identity_excluding_gaps(aln1, aln2)
 
+            # Console bar visualization
+            if args.print_bar:
+                bar = similarity_bar(
+                    aln1, aln2,
+                    width=args.bar_width,
+                    win=args.bar_window,
+                    threshold=args.bar_threshold,
+                )
+                # simple ruler
+                print(f"score={score}  identity={ident_pct:.2f}%  aln_len={len(aln1)}")
+                print(f"[0]{bar}[end]")
+                print("    " + "█ = similar region (windowed identity >= threshold)")
+
+            # Console alignment (head+tail blocks)
+            if args.print_align:
+                print()
+                print_alignment_blocks(aln1, aln2, block=args.block, head_tail_blocks=args.head_tail)
+
+            # Write per-pair alignment file
             out_name = safe_filename(f"{id1}__VS__{id2}.txt")
             out_path = os.path.join(args.out, out_name)
             write_alignment_txt(out_path, id1, id2, aln1, aln2, score, ident_pct, block=args.block)
 
-            writer.writerow([
-                id1, id2,
-                len(s1), len(s2),
-                len(aln1),
-                matches, compared, f"{ident_pct:.4f}",
-                score,
-            ])
+            # Summary CSV
+            writer.writerow(
+                [
+                    id1,
+                    id2,
+                    len(s1),
+                    len(s2),
+                    len(aln1),
+                    matches,
+                    compared,
+                    f"{ident_pct:.4f}",
+                    score,
+                ]
+            )
 
     print(f"\nDone.")
     print(f"Alignments written to: {args.out}")
