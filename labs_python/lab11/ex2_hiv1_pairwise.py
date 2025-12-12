@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """
-Lab11 - Exercise 2 (extended for console visualization)
+Lab11 - Exercise 2 (extended for console visualization + tables)
 Pairwise alignment of multiple HIV-1 genomes (multi-FASTA) using a piecewise strategy,
 and show alignment + a proportional "rectangular bar" similarity visualization in console.
+
+Also produces:
+- summary.csv (pair list)
+- summary_table.txt (pretty console-style table)
+- identity_matrix.csv (NxN)
+- score_matrix.csv (NxN)
 
 Stdlib only.
 """
@@ -372,9 +378,7 @@ def align_piecewise(
 # -----------------------------
 
 def make_match_line(aln1: str, aln2: str) -> str:
-    """
-    '|' match, '.' mismatch, ' ' gap
-    """
+    """'|' match, '.' mismatch, ' ' gap"""
     out = []
     for a, b in zip(aln1, aln2):
         if a == "-" or b == "-":
@@ -413,18 +417,13 @@ def identity_excluding_gaps(aln1: str, aln2: str):
 
 def similarity_bar(aln1: str, aln2: str, width: int = 100, win: int = 60, threshold: float = 0.85):
     """
-    Builds a proportional 'rectangular bar' line:
-    - Split alignment into `width` bins
-    - For each bin, compute windowed identity excluding gaps
-    - If identity >= threshold => draw a block '█', else space.
-
-    This highlights long similar regions as long bars.
+    Proportional "rectangular bar" similarity view:
+    draw '█' where windowed identity >= threshold.
     """
     L = len(aln1)
     if L == 0:
         return ""
 
-    # Use bins across alignment
     bar = []
     for b in range(width):
         start = (b * L) // width
@@ -432,7 +431,6 @@ def similarity_bar(aln1: str, aln2: str, width: int = 100, win: int = 60, thresh
         if end <= start:
             end = min(start + 1, L)
 
-        # Expand a bit around bin to be more "region-like" (optional smoothing)
         mid = (start + end) // 2
         w_start = max(0, mid - win // 2)
         w_end = min(L, w_start + win)
@@ -457,7 +455,7 @@ def similarity_bar(aln1: str, aln2: str, width: int = 100, win: int = 60, thresh
 def print_alignment_blocks(aln1: str, aln2: str, block: int = 80, head_tail_blocks: int = 3):
     """
     Prints alignment in blocks.
-    If alignment is huge, print head+tail blocks (still 'shows' alignment but manageable).
+    If huge, print head+tail blocks.
     """
     mid = make_match_line(aln1, aln2)
     total_blocks = (len(aln1) + block - 1) // block
@@ -475,20 +473,18 @@ def print_alignment_blocks(aln1: str, aln2: str, block: int = 80, head_tail_bloc
             print_block(bi)
         return
 
-    # head
     for bi in range(head_tail_blocks):
         print_block(bi)
 
     omitted = total_blocks - 2 * head_tail_blocks
     print(f"... ({omitted} blocks omitted) ...\n")
 
-    # tail
     for bi in range(total_blocks - head_tail_blocks, total_blocks):
         print_block(bi)
 
 
 # -----------------------------
-# File output
+# File output + tables
 # -----------------------------
 
 def safe_filename(name: str) -> str:
@@ -507,12 +503,41 @@ def write_alignment_txt(path: str, id1: str, id2: str, aln1: str, aln2: str, sco
             f.write(aln2[start : start + block] + "\n\n")
 
 
+def write_matrix_csv(path: str, ids, matrix, fmt=str):
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow([""] + ids)
+        for i, rid in enumerate(ids):
+            row = [rid]
+            for j in range(len(ids)):
+                val = matrix[i][j]
+                row.append("" if val is None else fmt(val))
+            w.writerow(row)
+
+
+def format_console_table(headers, rows):
+    col_w = [len(h) for h in headers]
+    for r in rows:
+        for i, cell in enumerate(r):
+            col_w[i] = max(col_w[i], len(cell))
+
+    def line(sep="-"):
+        return sep.join(sep * (w + 2) for w in col_w)
+
+    out = []
+    out.append(" | ".join(headers[i].ljust(col_w[i]) for i in range(len(headers))))
+    out.append(line(sep="-"))
+    for r in rows:
+        out.append(" | ".join(r[i].ljust(col_w[i]) for i in range(len(headers))))
+    return "\n".join(out)
+
+
 # -----------------------------
 # Main
 # -----------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Lab11 Ex2: piecewise pairwise alignment + console bars (stdlib only).")
+    parser = argparse.ArgumentParser(description="Lab11 Ex2: piecewise pairwise alignment + console bars + tables (stdlib only).")
     parser.add_argument("-i", "--input", required=True, help="Path to multi-FASTA with ~10 HIV-1 genomes")
     parser.add_argument("-o", "--out", default="labs_python/lab11/out/ex2_hiv1_pairwise", help="Output directory")
 
@@ -546,6 +571,19 @@ def main():
     print(f"Loaded {len(records)} sequences from: {args.input}")
     for r in records:
         print(f"  - {r['id']}: {len(r['seq'])} bp")
+
+    # prepare matrices + pretty table rows
+    ids = [r["id"] for r in records]
+    id_to_idx = {rid: i for i, rid in enumerate(ids)}
+    n = len(ids)
+
+    score_mat = [[None] * n for _ in range(n)]
+    ident_mat = [[None] * n for _ in range(n)]
+    for i in range(n):
+        score_mat[i][i] = 0
+        ident_mat[i][i] = 100.0
+
+    table_rows = []
 
     summary_path = os.path.join(args.out, "summary.csv")
     with open(summary_path, "w", newline="", encoding="utf-8") as csvf:
@@ -591,6 +629,24 @@ def main():
             score = alignment_score(aln1, aln2, args.match, args.mismatch, args.gap)
             matches, compared, ident_pct = identity_excluding_gaps(aln1, aln2)
 
+            # store in matrices
+            i = id_to_idx[id1]
+            j = id_to_idx[id2]
+            score_mat[i][j] = score
+            score_mat[j][i] = score
+            ident_mat[i][j] = ident_pct
+            ident_mat[j][i] = ident_pct
+
+            # row for pretty console table
+            table_rows.append([
+                str(pair_count),
+                id1,
+                id2,
+                f"{ident_pct:.2f}",
+                str(score),
+                str(len(aln1)),
+            ])
+
             # Console bar visualization
             if args.print_bar:
                 bar = similarity_bar(
@@ -599,7 +655,6 @@ def main():
                     win=args.bar_window,
                     threshold=args.bar_threshold,
                 )
-                # simple ruler
                 print(f"score={score}  identity={ident_pct:.2f}%  aln_len={len(aln1)}")
                 print(f"[0]{bar}[end]")
                 print("    " + "█ = similar region (windowed identity >= threshold)")
@@ -628,6 +683,26 @@ def main():
                     score,
                 ]
             )
+
+    # ---- pretty table + matrices ----
+    headers = ["#", "seq1", "seq2", "similarity_%", "nw_score", "aln_len"]
+    table_text = format_console_table(headers, table_rows)
+
+    print("\n=== Pairwise Similarity Table (identity excluding gaps %) ===")
+    print(table_text)
+
+    summary_table_path = os.path.join(args.out, "summary_table.txt")
+    with open(summary_table_path, "w", encoding="utf-8") as f:
+        f.write(table_text + "\n")
+
+    identity_matrix_path = os.path.join(args.out, "identity_matrix.csv")
+    score_matrix_path = os.path.join(args.out, "score_matrix.csv")
+    write_matrix_csv(identity_matrix_path, ids, ident_mat, fmt=lambda x: f"{x:.2f}")
+    write_matrix_csv(score_matrix_path, ids, score_mat, fmt=lambda x: str(int(x)))
+
+    print(f"\nSaved summary table: {summary_table_path}")
+    print(f"Saved identity matrix: {identity_matrix_path}")
+    print(f"Saved score matrix: {score_matrix_path}")
 
     print(f"\nDone.")
     print(f"Alignments written to: {args.out}")
