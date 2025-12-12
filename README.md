@@ -115,3 +115,10 @@ for exercise 1
 `
 python labs_python/lab11/ex1_needleman_wunsch.py --matrix
 `
+
+for exercise 2
+`
+python labs_python/lab11/ex2_hiv1_pairwise.py \
+  -i labs_python/lab11/data/sequences.fasta \
+  -o labs_python/lab11/out/ex2_hiv1_pairwise
+`
