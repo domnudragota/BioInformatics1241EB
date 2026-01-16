@@ -1,0 +1,63 @@
+{
+  "type": "dna_transition_matrix",
+  "alphabet": [
+    "A",
+    "C",
+    "G",
+    "T"
+  ],
+  "sequence_length": 50,
+  "sequence": "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC",
+  "counts": [
+    [
+      0,
+      13,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      12,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      12
+    ],
+    [
+      12,
+      0,
+      0,
+      0
+    ]
+  ],
+  "probabilities": [
+    [
+      0.0,
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  ]
+}
