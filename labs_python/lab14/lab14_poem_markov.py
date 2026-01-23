@@ -19,7 +19,7 @@ Method:
        negative => more like Stanescu
 
 Run example:
-  python3 lab15_poem_markov.py \
+  python3 lab14_poem_markov.py \
     --eminescu eminescu.txt \
     --stanescu stanescu.txt \
     --test test.txt \
